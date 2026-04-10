@@ -1,0 +1,85 @@
+:root {
+  --trp-surface: rgba(255, 255, 255, 0.96);
+  --trp-border: rgba(34, 34, 34, 0.08);
+  --trp-text: #4d4338;
+  --trp-muted: #7f7467;
+  --trp-error: #a0352a;
+}
+
+.trp-translation {
+  margin: 0.38em 0 0.72em;
+  padding: 0.72em 0.9em;
+  border: 1px solid var(--trp-border);
+  border-radius: 10px;
+  background: var(--trp-surface);
+  color: var(--trp-text);
+  line-height: 1.7;
+  box-shadow: 0 6px 20px rgba(15, 15, 15, 0.04);
+}
+
+.trp-translation[data-context="nav"] {
+  margin: 0.22em 0 0.55em;
+  padding: 0.18em 0 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.trp-translation[data-context="table"] {
+  margin: 0.25em 0 0;
+  padding: 0.15em 0 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.trp-translation[data-context="nav"] .trp-text,
+.trp-translation[data-context="table"] .trp-text {
+  font-size: 0.94em;
+  color: var(--trp-muted);
+}
+
+.trp-translation.trp-hidden {
+  display: none;
+}
+
+.trp-translation[data-status="pending"] {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.trp-status {
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--trp-muted);
+  margin-bottom: 0.22em;
+}
+
+.trp-text {
+  white-space: pre-wrap;
+}
+
+.trp-error {
+  font-size: 0.92em;
+  color: var(--trp-error);
+  margin-top: 0.3em;
+}
+
+.trp-inline-button {
+  margin-top: 0.65em;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.45em 0.9em;
+  background: var(--trp-button-bg, #6b5b4d);
+  color: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.trp-inline-button[disabled] {
+  opacity: 0.6;
+  cursor: wait;
+}

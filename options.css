@@ -1,0 +1,254 @@
+:root {
+  color-scheme: light;
+  --bg-0: #ffffff;
+  --bg-1: #f8f3ff;
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel-2: rgba(250, 247, 255, 0.9);
+  --line: rgba(112, 74, 180, 0.14);
+  --text: #2c2137;
+  --muted: #6d627b;
+  --accent: #c4b5fd;
+  --accent-strong: #8b5cf6;
+  --accent-soft: rgba(196, 181, 253, 0.28);
+  --danger-soft: rgba(244, 114, 182, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 14% 8%, rgba(196, 181, 253, 0.35), transparent 42%),
+    radial-gradient(circle at 86% 14%, rgba(167, 139, 250, 0.18), transparent 46%),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1));
+}
+
+.shell {
+  width: min(860px, calc(100vw - 36px));
+  margin: 26px auto 44px;
+}
+
+.hero,
+.card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 18px 48px rgba(46, 31, 70, 0.08);
+}
+
+.hero {
+  padding: 22px 22px 18px;
+  background: var(--panel-2);
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  max-width: 62ch;
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.card {
+  margin-top: 18px;
+  padding: 22px;
+}
+
+.field {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.field span {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid rgba(112, 74, 180, 0.18);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 3px solid rgba(196, 181, 253, 0.42);
+  outline-offset: 1px;
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+textarea {
+  resize: vertical;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 26px;
+  flex-wrap: wrap;
+}
+
+.prompt-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: -4px;
+}
+
+.prompt-manager {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid rgba(112, 74, 180, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.prompt-manager-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-weight: 650;
+}
+
+.prompt-note {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.prompt-list {
+  display: grid;
+  gap: 10px;
+}
+
+.prompt-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(112, 74, 180, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.prompt-item.active {
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 12px 28px rgba(139, 92, 246, 0.1);
+}
+
+.prompt-meta {
+  min-width: 0;
+}
+
+.prompt-title {
+  margin: 0;
+  font-weight: 650;
+}
+
+.prompt-preview {
+  margin: 6px 0 0;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prompt-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.prompt-enable.active {
+  background: rgba(139, 92, 246, 0.16);
+  border-color: rgba(139, 92, 246, 0.28);
+  color: #4c1d95;
+}
+
+.prompt-delete {
+  background: var(--danger-soft);
+  border-color: rgba(244, 114, 182, 0.2);
+  color: #6b2147;
+}
+
+button {
+  border: 1px solid rgba(112, 74, 180, 0.16);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+button:hover {
+  border-color: rgba(139, 92, 246, 0.25);
+  background: rgba(196, 181, 253, 0.34);
+}
+
+.prompt-actions button {
+  padding: 10px 12px;
+  border-radius: 999px;
+}
+
+.primary {
+  border-color: rgba(139, 92, 246, 0.26);
+  background: linear-gradient(180deg, rgba(196, 181, 253, 0.72), rgba(167, 139, 250, 0.56));
+  color: #2c2137;
+}
+
+.save-status {
+  min-height: 24px;
+  margin: 16px 0 0;
+  color: var(--muted);
+}
+
+@media (max-width: 520px) {
+  .shell {
+    width: min(860px, calc(100vw - 22px));
+    margin: 18px auto 34px;
+  }
+
+  .hero {
+    padding: 18px 18px 14px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+}

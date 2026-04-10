@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Settings</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Stream Translate Page</p>
+        <h1>Provider 配置</h1>
+        <p class="subtitle">填写 OpenAI-compatible provider 信息。插件会通过 `responses` 接口按段落批次请求翻译。</p>
+      </section>
+
+      <form id="config-form" class="card">
+        <label class="field">
+          <span>Base URL</span>
+          <input id="provider-base-url" name="providerBaseUrl" type="url" placeholder="https://api.example.com/v1" required>
+        </label>
+
+        <label class="field">
+          <span>API Key</span>
+          <input id="api-key" name="apiKey" type="password" placeholder="sk-..." required>
+        </label>
+
+        <label class="field">
+          <span>Model</span>
+          <input id="model" name="model" type="text" placeholder="gpt-4.1-mini" required>
+        </label>
+
+        <label class="field">
+          <span>Request Timeout (ms)</span>
+          <input id="request-timeout-ms" name="requestTimeoutMs" type="number" min="5000" step="1000" value="45000" required>
+        </label>
+
+        <label class="field">
+          <span>Batch Size</span>
+          <input id="batch-size" name="batchSize" type="number" min="1" max="20" step="1" value="6" required>
+        </label>
+
+        <label class="field">
+          <span>译文字体颜色</span>
+          <select id="translation-color-theme" name="translationColorTheme">
+            <option value="deep-olive">暗橄榄</option>
+            <option value="charcoal-blue">暗蓝灰</option>
+            <option value="warm-taupe">暖灰褐</option>
+            <option value="sage-olive">鼠尾草灰绿</option>
+            <option value="soft-amber">浅琥珀</option>
+            <option value="mist-blue">浅雾蓝</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>新增 System Prompt</span>
+          <textarea id="prompt-draft" rows="7" placeholder="粘贴一套新的 system prompt，然后点击“添加提示词”。"></textarea>
+        </label>
+
+        <div class="prompt-toolbar">
+          <button id="add-prompt" type="button">添加提示词</button>
+        </div>
+
+        <section class="prompt-manager">
+          <div class="prompt-manager-head">
+            <span>提示词列表</span>
+            <span class="prompt-note">仅可启用一套</span>
+          </div>
+          <div id="prompt-list" class="prompt-list"></div>
+        </section>
+
+        <div class="actions">
+          <button class="primary" type="submit">保存设置</button>
+          <button id="reset-defaults" type="button">恢复默认</button>
+        </div>
+
+        <p id="save-status" class="save-status"></p>
+      </form>
+    </main>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

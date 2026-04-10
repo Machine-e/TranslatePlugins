@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Translate Page</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="panel">
+      <section class="hero">
+        <p class="eyebrow">Stream Translate Page</p>
+        <h1>网页双语翻译</h1>
+        <p class="subtitle">让页面更顺畅地读懂英文。</p>
+      </section>
+
+      <section class="status-card">
+        <div class="status-row">
+          <span class="label">状态</span>
+          <span id="status-badge" class="badge">待命</span>
+        </div>
+        <p id="status-message" class="status-message">点击“开始翻译”处理当前页面。</p>
+        <div class="progress">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <p id="progress-text" class="progress-text">0 / 0</p>
+      </section>
+
+      <section class="quick-settings">
+        <label class="quick-field" for="translation-color-theme">
+          <span>译文字体颜色</span>
+          <div class="select-shell">
+            <select id="translation-color-theme">
+              <option value="deep-olive">暗橄榄</option>
+              <option value="charcoal-blue">暗蓝灰</option>
+              <option value="warm-taupe">暖灰褐</option>
+              <option value="sage-olive">鼠尾草灰绿</option>
+              <option value="soft-amber">浅琥珀</option>
+              <option value="mist-blue">浅雾蓝</option>
+            </select>
+          </div>
+        </label>
+      </section>
+
+      <section class="actions">
+        <button id="start-button" class="primary">开始翻译</button>
+        <button id="stop-button">停止</button>
+        <button id="toggle-button">隐藏译文</button>
+        <button id="clear-button">清除当前页</button>
+      </section>
+
+      <footer class="footer">
+        <button id="open-options" class="link-button">Provider 设置</button>
+      </footer>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
