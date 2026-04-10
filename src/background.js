@@ -3,13 +3,16 @@ const BUILTIN_PROMPT_ID = "builtin-default";
 const BUILTIN_PROMPT_LABEL = "内置默认提示词";
 const BUILTIN_SYSTEM_PROMPT = [
   "You are a professional webpage translator.",
-  "Translate English text into Simplified Chinese.",
+  "Translate English text into natural, accurate, fluent Simplified Chinese.",
   "Return valid JSON only.",
   "Output shape: {\"translations\":[{\"segmentId\":\"...\",\"translatedText\":\"...\"}]}",
   "Rules:",
   "- Keep the same segment order and segment IDs as the input.",
   "- Do not merge or split segments.",
-  "- Preserve names, links, punctuation, markdown-like markers, and inline emphasis when possible.",
+  "- Preserve model names, product names, brand names, URLs, file paths, commands, and code identifiers when appropriate.",
+  "- Preserve numbers, currencies, units, and table values; translate only the human-readable labels.",
+  "- For nav/table labels, keep translations concise.",
+  "- For code comments, translate as comments; never output code.",
   "- Do not add commentary, notes, or extra keys."
 ].join("\n");
 
@@ -391,9 +394,9 @@ async function translateBatch(state, batch) {
     throw new Error("Translation controller is not available.");
   }
 
-  const requestBody = {
+  const baseRequestBody = {
     model: state.config.model,
-    temperature: 0.2,
+    temperature: 0,
     instructions: resolveSystemPrompt(state.config),
     input: buildUserPrompt(batch)
   };
@@ -404,14 +407,20 @@ async function translateBatch(state, batch) {
   parentController.signal.addEventListener("abort", bridgeAbort, { once: true });
 
   try {
-    const rawContent = await requestProviderContent(
-      endpoint,
-      requestBody,
-      state.config.apiKey,
-      controller.signal
-    );
-    const parsed = normalizeTranslations(rawContent);
-    return parsed.filter((item) => item.segmentId && item.translatedText);
+    const attempts = buildTranslationAttempts(baseRequestBody, batch);
+    let lastError = null;
+
+    for (const attempt of attempts) {
+      try {
+        const rawContent = await requestProviderContent(endpoint, attempt, state.config.apiKey, controller.signal);
+        const parsed = normalizeTranslations(rawContent);
+        return parsed.filter((item) => item.segmentId && item.translatedText);
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError || new Error("Translation failed.");
   } catch (error) {
     if (controller.signal.aborted || parentController.signal.aborted) {
       throw new Error("Translation stopped.");
@@ -422,6 +431,59 @@ async function translateBatch(state, batch) {
     clearTimeout(timeoutId);
     parentController.signal.removeEventListener("abort", bridgeAbort);
   }
+}
+
+function buildTranslationAttempts(baseRequestBody, batch) {
+  return [withJsonSchemaFormat(baseRequestBody, batch), baseRequestBody];
+}
+
+function withJsonSchemaFormat(requestBody, batch) {
+  const schema = buildTranslationJsonSchema(batch);
+  return {
+    ...requestBody,
+    text: {
+      format: {
+        type: "json_schema",
+        name: "translation_batch",
+        description: "Batch translation results keyed by segmentId.",
+        strict: true,
+        schema
+      },
+      verbosity: "low"
+    }
+  };
+}
+
+function buildTranslationJsonSchema(batch) {
+  const ids = batch.map((segment) => segment.segmentId).filter((id) => typeof id === "string");
+
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      translations: {
+        type: "array",
+        minItems: ids.length,
+        maxItems: ids.length,
+        uniqueItems: true,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            segmentId: {
+              type: "string",
+              enum: ids
+            },
+            translatedText: {
+              type: "string"
+            }
+          },
+          required: ["segmentId", "translatedText"]
+        }
+      }
+    },
+    required: ["translations"]
+  };
 }
 
 function createState(tabId, config, extraction) {
@@ -500,13 +562,19 @@ function validateConfig(config) {
 
 function buildUserPrompt(batch) {
   return [
-    "Translate the following webpage segments into Simplified Chinese.",
+    "Translate each item into Simplified Chinese.",
     "Return valid JSON only.",
+    "Use the item's context to keep the translation appropriate:",
+    "- nav: concise UI label",
+    "- table: concise header/cell label, keep numbers/currency/model names unchanged",
+    "- content: natural reading flow",
+    "- code-comment: translate comments only (no code)",
     "",
     JSON.stringify(
       {
-        translations: batch.map((segment) => ({
+        items: batch.map((segment) => ({
           segmentId: segment.segmentId,
+          context: segment.context || "content",
           sourceText: segment.text
         }))
       },
@@ -861,7 +929,8 @@ function normalizeSegmentPayload(segments) {
     }
     seen.add(segmentId);
 
-    cleaned.push({ segmentId, text });
+    const context = typeof segment.context === "string" ? segment.context.trim() : "";
+    cleaned.push({ segmentId, text, context });
   }
 
   return cleaned;

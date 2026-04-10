@@ -2,6 +2,8 @@
 
 A Chrome Manifest V3 extension that translates English-heavy webpage content into Simplified Chinese and inserts the translation under the original text.
 
+Chinese: `README.zh-CN.md`
+
 ## Features
 
 - Manual full-page translation from the popup

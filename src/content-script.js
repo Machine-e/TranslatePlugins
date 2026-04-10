@@ -107,7 +107,7 @@ function prepareTranslation(translationColorTheme) {
 
   return {
     ok: true,
-    segments: segments.map(({ segmentId, text }) => ({ segmentId, text }))
+    segments: segments.map(({ segmentId, text, context }) => ({ segmentId, text, context }))
   };
 }
 
@@ -292,11 +292,7 @@ function collectCodeCommentSegments() {
 
     segments.push({
       segmentId,
-      text: [
-        "Translate only the following code comments into Simplified Chinese.",
-        "Do not translate code.",
-        commentText
-      ].join("\n"),
+      text: commentText,
       element: root,
       kind: "code-comment",
       context: "code-comment"
@@ -677,7 +673,7 @@ function attachInlineActions() {
     }
 
     const segment = session.segments.get(segmentId);
-    const payload = segment ? [{ segmentId, text: segment.text }] : [];
+    const payload = segment ? [{ segmentId, text: segment.text, context: segment.context || "" }] : [];
 
     target.setAttribute("disabled", "true");
     target.textContent = "重试中...";
