@@ -2,5 +2,8 @@
 node_modules/
 dist/
 build/
+releases/.tmp/
+releases/unpacked/
+*.crx
 .DS_Store
 Thumbs.db

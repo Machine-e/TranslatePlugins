@@ -21,6 +21,31 @@ Chinese: `README.zh-CN.md`
 3. Click `Load unpacked`
 4. Select the folder containing `manifest.json`
 
+## Release package
+
+Build a clean release zip:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\build-release.ps1
+```
+
+This creates:
+
+- `releases/stream-translate-page-v<version>.zip`
+- `releases/stream-translate-page-latest.zip`
+
+Quick import helper on Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\import-release.ps1
+```
+
+Or double-click:
+
+- `releases/Import-Into-Chrome.cmd`
+
+The helper unpacks the latest release, opens `chrome://extensions`, opens the unpacked folder, and copies the folder path to your clipboard. Chrome still requires one final `Load unpacked` confirmation for security reasons.
+
 ## Provider settings
 
 Open the extension options page and configure:
@@ -39,6 +64,7 @@ The extension will call:
 
 - Do not commit or share your API key. This repo contains no real keys (only placeholders).
 - The API key is stored locally via `chrome.storage.local` and is sent to the configured provider when translating.
+- The release build script scans staged files and aborts if it detects likely hardcoded secrets.
 
 ## Usage
 

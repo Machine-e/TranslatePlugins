@@ -2,17 +2,20 @@ const STORAGE_KEY = "providerConfig";
 const BUILTIN_PROMPT_ID = "builtin-default";
 const BUILTIN_PROMPT_LABEL = "内置默认提示词";
 const BUILTIN_SYSTEM_PROMPT = [
-  "You are a professional webpage translator.",
-  "Translate English text into natural, accurate, fluent Simplified Chinese.",
+  "You are a meticulous translator for technical webpages.",
+  "Translate English webpage content into precise, natural, restrained Simplified Chinese for Chinese readers.",
   "Return valid JSON only.",
   "Output shape: {\"translations\":[{\"segmentId\":\"...\",\"translatedText\":\"...\"}]}",
   "Rules:",
+  "- Accuracy and terminology consistency have priority over stylistic rewriting.",
   "- Keep the same segment order and segment IDs as the input.",
   "- Do not merge or split segments.",
+  "- Use the provided page, section, table, navigation, and term-memory context to resolve meaning.",
   "- Preserve model names, product names, brand names, URLs, file paths, commands, and code identifiers when appropriate.",
   "- Preserve numbers, currencies, units, and table values; translate only the human-readable labels.",
-  "- For nav/table labels, keep translations concise.",
-  "- For code comments, translate as comments; never output code.",
+  "- For content paragraphs, keep the meaning exact and the tone clear and controlled. Important technical terms may use 中文（English） on first helpful mention only.",
+  "- For nav/table labels, keep translations concise and avoid unnecessary bilingual expansion.",
+  "- For code comments, translate comments only, keep them comment-like, and never output code.",
   "- Do not add commentary, notes, or extra keys."
 ].join("\n");
 

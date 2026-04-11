@@ -23,6 +23,31 @@
 3. 点击 `Load unpacked`
 4. 选择包含 `manifest.json` 的目录
 
+## Release 打包与一键导入
+
+生成干净的发布 zip：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\build-release.ps1
+```
+
+会产出：
+
+- `releases/stream-translate-page-v<version>.zip`
+- `releases/stream-translate-page-latest.zip`
+
+Windows 下一键导入辅助：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\import-release.ps1
+```
+
+或直接双击：
+
+- `releases/Import-Into-Chrome.cmd`
+
+这个辅助脚本会自动解压最新 release、打开 `chrome://extensions`、打开解压目录，并把目录路径复制到剪贴板。由于 Chrome 安全限制，最后仍需要你手动点一次 `Load unpacked` 完成导入。
+
 ## Provider 配置
 
 打开扩展的 `Options` 页面，填写：
@@ -50,10 +75,10 @@
 - 不要把真实 `API Key` 提交到 Git 仓库或分享给他人。
 - `API Key` 保存在本机浏览器的 `chrome.storage.local` 中，翻译时会把页面内容发送到你配置的 provider。
 - 若页面含敏感内容，请谨慎使用，或配置你的私有 provider/代理。
+- `scripts/build-release.ps1` 会在打包前扫描发布文件，发现疑似硬编码密钥时会直接中止，避免把敏感字段打进 release。
 
 ## 常见问题
 
 - `Failed to fetch`：
   - 请确认 provider 支持 `POST /responses` 且允许浏览器端请求（CORS/网络策略）。
   - 部分 provider 不支持流式：插件会自动降级为非流式请求，但仍按批次逐段插入。
-

@@ -107,7 +107,7 @@ function prepareTranslation(translationColorTheme) {
 
   return {
     ok: true,
-    segments: segments.map(({ segmentId, text, context }) => ({ segmentId, text, context }))
+    segments: segments.map(serializeSegment)
   };
 }
 
@@ -129,11 +129,12 @@ function applyTheme(themeKey) {
 }
 
 function collectSegments() {
+  const pageContext = getPageContext();
   const segments = [
-    ...collectCodeCommentSegments(),
-    ...collectTableCellSegments(),
-    ...collectSidebarNavSegments(),
-    ...collectContentSegments()
+    ...collectCodeCommentSegments(pageContext),
+    ...collectTableCellSegments(pageContext),
+    ...collectSidebarNavSegments(pageContext),
+    ...collectContentSegments(pageContext)
   ];
 
   segments.sort((a, b) => {
@@ -157,10 +158,14 @@ function collectSegments() {
     return 0;
   });
 
+  segments.forEach((segment, index) => {
+    segment.positionIndex = index;
+  });
+
   return segments;
 }
 
-function collectContentSegments() {
+function collectContentSegments(pageContext) {
   const candidates = Array.from(
     document.body.querySelectorAll("h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,dd,dt,summary,div")
   );
@@ -193,7 +198,10 @@ function collectContentSegments() {
       segmentId,
       text,
       element,
-      context: "content"
+      context: "content",
+      pageTitle: pageContext.pageTitle,
+      mainHeading: pageContext.mainHeading,
+      sectionHeading: findSectionHeading(element)
     });
   }
 
@@ -264,7 +272,7 @@ function normalizeText(text) {
   return text.replace(/\s+/g, " ").trim();
 }
 
-function collectCodeCommentSegments() {
+function collectCodeCommentSegments(pageContext) {
   const blocks = Array.from(document.body.querySelectorAll("pre, pre code, code"))
     .filter((element) => element instanceof HTMLElement)
     .filter((element) => isCodeBlockElement(element));
@@ -295,7 +303,10 @@ function collectCodeCommentSegments() {
       text: commentText,
       element: root,
       kind: "code-comment",
-      context: "code-comment"
+      context: "code-comment",
+      pageTitle: pageContext.pageTitle,
+      mainHeading: pageContext.mainHeading,
+      sectionHeading: findSectionHeading(root)
     });
   }
 
@@ -341,10 +352,11 @@ function looksLikeIdentifier(text) {
   return /[\d_.-]/.test(trimmed) && /^[A-Za-z0-9_.:-]+$/.test(trimmed);
 }
 
-function collectTableCellSegments() {
+function collectTableCellSegments(pageContext) {
   const cells = Array.from(document.body.querySelectorAll("table th, table td"));
   const segments = [];
   const seenSignatures = new Set();
+  const tableIds = new Map();
   let index = 0;
 
   for (const cell of cells) {
@@ -386,18 +398,26 @@ function collectTableCellSegments() {
     index += 1;
     cell.dataset[DATA_ID] = segmentId;
 
+    const table = cell.closest("table");
     segments.push({
       segmentId,
       text,
       element: cell,
-      context: "table"
+      context: "table",
+      pageTitle: pageContext.pageTitle,
+      mainHeading: pageContext.mainHeading,
+      sectionHeading: findSectionHeading(cell),
+      tableId: getStableElementId(table, "table", tableIds),
+      tableCaption: getTableCaption(table),
+      columnHeader: getTableColumnHeader(cell),
+      rowHeader: getTableRowHeader(cell)
     });
   }
 
   return segments;
 }
 
-function collectSidebarNavSegments() {
+function collectSidebarNavSegments(pageContext) {
   const container = findSidebarNavContainer();
   if (!container) {
     return [];
@@ -449,7 +469,11 @@ function collectSidebarNavSegments() {
       segmentId,
       text,
       element,
-      context: "nav"
+      context: "nav",
+      pageTitle: pageContext.pageTitle,
+      mainHeading: pageContext.mainHeading,
+      sectionHeading: findSectionHeading(element),
+      navGroupHeading: findNavGroupHeading(element, container)
     });
   }
 
@@ -553,6 +577,292 @@ function cleanComment(comment) {
     .map((line) => line.replace(/^\s*\*\s?/, "").trim())
     .join("\n")
     .trim();
+}
+
+function getPageContext() {
+  return {
+    pageTitle: normalizeText(document.title || ""),
+    mainHeading: normalizeText(findMainHeadingText())
+  };
+}
+
+function findMainHeadingText() {
+  const headings = Array.from(document.body.querySelectorAll("h1, main h2, article h2"));
+  for (const heading of headings) {
+    if (!(heading instanceof HTMLElement) || !isVisible(heading)) {
+      continue;
+    }
+
+    const text = normalizeText(heading.innerText || "");
+    if (text) {
+      return text;
+    }
+  }
+
+  return "";
+}
+
+function findSectionHeading(element) {
+  if (!(element instanceof HTMLElement)) {
+    return "";
+  }
+
+  const selectors = "h1,h2,h3,h4,h5,h6";
+  const ownHeading = element.matches(selectors) ? normalizeText(element.innerText || "") : "";
+  if (ownHeading) {
+    return ownHeading;
+  }
+
+  let current = element;
+  while (current) {
+    let sibling = current.previousElementSibling;
+    while (sibling) {
+      const heading = findLastHeadingInElement(sibling);
+      if (heading) {
+        return heading;
+      }
+      sibling = sibling.previousElementSibling;
+    }
+    current = current.parentElement;
+    if (!current || current === document.body) {
+      break;
+    }
+  }
+
+  return "";
+}
+
+function findLastHeadingInElement(element) {
+  if (!(element instanceof HTMLElement)) {
+    return "";
+  }
+
+  const selectors = "h1,h2,h3,h4,h5,h6";
+  if (element.matches(selectors) && isVisible(element)) {
+    return normalizeText(element.innerText || "");
+  }
+
+  const headings = Array.from(element.querySelectorAll(selectors)).filter(
+    (node) => node instanceof HTMLElement && isVisible(node)
+  );
+  for (let index = headings.length - 1; index >= 0; index -= 1) {
+    const text = normalizeText(headings[index].innerText || "");
+    if (text) {
+      return text;
+    }
+  }
+
+  return "";
+}
+
+function getStableElementId(element, prefix, cache) {
+  if (!(element instanceof HTMLElement)) {
+    return "";
+  }
+
+  if (cache.has(element)) {
+    return cache.get(element);
+  }
+
+  const explicitId = normalizeText(element.id || "");
+  if (explicitId) {
+    cache.set(element, explicitId);
+    return explicitId;
+  }
+
+  const generatedId = `${prefix}-${cache.size}`;
+  cache.set(element, generatedId);
+  return generatedId;
+}
+
+function getTableCaption(table) {
+  if (!(table instanceof HTMLTableElement)) {
+    return "";
+  }
+
+  const caption = table.querySelector("caption");
+  return caption instanceof HTMLElement ? normalizeText(caption.innerText || "") : "";
+}
+
+function getTableColumnHeader(cell) {
+  if (!(cell instanceof HTMLTableCellElement)) {
+    return "";
+  }
+
+  const table = cell.closest("table");
+  if (!(table instanceof HTMLTableElement)) {
+    return "";
+  }
+
+  const row = cell.parentElement;
+  const cellIndex = cell.cellIndex;
+  if (!(row instanceof HTMLTableRowElement) || cellIndex < 0) {
+    return "";
+  }
+
+  const headerCandidates = [];
+  const theadRows = Array.from(table.tHead?.rows || []);
+  const bodyRows = Array.from(table.rows || []);
+
+  for (const headerRow of [...theadRows, ...bodyRows]) {
+    if (!(headerRow instanceof HTMLTableRowElement)) {
+      continue;
+    }
+    if (headerRow.rowIndex > row.rowIndex) {
+      continue;
+    }
+
+    const candidate = headerRow.cells[cellIndex];
+    if (!(candidate instanceof HTMLTableCellElement) || candidate === cell) {
+      continue;
+    }
+
+    const text = normalizeText(candidate.innerText || "");
+    if (!text) {
+      continue;
+    }
+
+    if (candidate.tagName === "TH" || headerRow.sectionRowIndex === 0) {
+      headerCandidates.push(text);
+    }
+  }
+
+  return headerCandidates.length ? headerCandidates[headerCandidates.length - 1] : "";
+}
+
+function getTableRowHeader(cell) {
+  if (!(cell instanceof HTMLTableCellElement)) {
+    return "";
+  }
+
+  const row = cell.parentElement;
+  if (!(row instanceof HTMLTableRowElement)) {
+    return "";
+  }
+
+  for (const candidate of Array.from(row.cells)) {
+    if (!(candidate instanceof HTMLTableCellElement) || candidate === cell) {
+      continue;
+    }
+
+    const text = normalizeText(candidate.innerText || "");
+    if (!text) {
+      continue;
+    }
+
+    if (candidate.tagName === "TH" || candidate.cellIndex === 0) {
+      return text;
+    }
+  }
+
+  return "";
+}
+
+function findNavGroupHeading(element, container) {
+  if (!(element instanceof HTMLElement) || !(container instanceof HTMLElement)) {
+    return "";
+  }
+
+  const directCategory = findClosestNavCategoryLabel(element, container);
+  if (directCategory) {
+    return directCategory;
+  }
+
+  const ownSection = element.closest("section,[role='group'],li,div");
+  let current = ownSection instanceof HTMLElement ? ownSection : element.parentElement;
+
+  while (current && current !== container) {
+    const heading = findFirstHeadingWithin(current);
+    if (heading) {
+      return heading;
+    }
+
+    let sibling = current.previousElementSibling;
+    while (sibling) {
+      const siblingHeading = findLastHeadingInElement(sibling);
+      if (siblingHeading) {
+        return siblingHeading;
+      }
+      sibling = sibling.previousElementSibling;
+    }
+
+    current = current.parentElement;
+  }
+
+  return "";
+}
+
+function findFirstHeadingWithin(element) {
+  if (!(element instanceof HTMLElement)) {
+    return "";
+  }
+
+  const heading = element.querySelector("h1,h2,h3,h4,h5,h6,strong,.menu__link--sublist,.menu__link--active");
+  if (!(heading instanceof HTMLElement) || !isVisible(heading)) {
+    return "";
+  }
+
+  return normalizeText(heading.innerText || "");
+}
+
+function findClosestNavCategoryLabel(element, container) {
+  let current = element.parentElement;
+
+  while (current && current !== container) {
+    if (current.classList.contains("menu__list-item")) {
+      const categoryLink = current.querySelector(":scope > .menu__list-item-collapsible > .menu__link");
+      if (categoryLink instanceof HTMLElement && isVisible(categoryLink)) {
+        const text = normalizeText(categoryLink.innerText || "");
+        if (text) {
+          return text;
+        }
+      }
+
+      const directLink = current.querySelector(":scope > .menu__link--sublist");
+      if (directLink instanceof HTMLElement && isVisible(directLink)) {
+        const text = normalizeText(directLink.innerText || "");
+        if (text) {
+          return text;
+        }
+      }
+    }
+
+    current = current.parentElement;
+  }
+
+  return "";
+}
+
+function serializeSegment(segment) {
+  const {
+    segmentId,
+    text,
+    context,
+    positionIndex,
+    pageTitle,
+    mainHeading,
+    sectionHeading,
+    tableId,
+    tableCaption,
+    columnHeader,
+    rowHeader,
+    navGroupHeading
+  } = segment;
+
+  return {
+    segmentId,
+    text,
+    context,
+    positionIndex,
+    pageTitle,
+    mainHeading,
+    sectionHeading,
+    tableId,
+    tableCaption,
+    columnHeader,
+    rowHeader,
+    navGroupHeading
+  };
 }
 
 function markSegmentsPending(segmentIds) {
@@ -673,7 +983,7 @@ function attachInlineActions() {
     }
 
     const segment = session.segments.get(segmentId);
-    const payload = segment ? [{ segmentId, text: segment.text, context: segment.context || "" }] : [];
+    const payload = segment ? [serializeSegment(segment)] : [];
 
     target.setAttribute("disabled", "true");
     target.textContent = "重试中...";
